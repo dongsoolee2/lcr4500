@@ -1,0 +1,150 @@
+The latest version (v4.0.0) of GUI from TI has some errors. To use this GUI in Linux
+some parts of the codes need to be corrected. The source code can be obtained
+from GUI file for Windows. There is [Source Code] folder.
+
+Tested on XPS9300, Linux 18.04.4 LTS (kernel 5.0.0), DLPLCR4500 (v4.0.0), DLPR350PROM (v4.1.0)
+Qt Creator 4.5.2 based on Qt 5.9.5
+
+06092020 Dongsoo Lee (dsnl@stanford.edu; Baccus Lab)
+
+------
+
+
+1. Directory path [LCr4500.pro] should be updated.
+
+From
+#win32:CONFIG(release, debug|release): LIBS += -L../GUI/hidapi-master/windows/release/ -lhidapi
+#else:win32:CONFIG(debug, debug|release): LIBS += -L../GUI/hidapi-master/windows/debug/ -lhidapi
+#macx: SOURCES += ../GUI/hidapi-master/mac/hid.c
+#unix: !macx: SOURCES += ../GUI/hidapi-master/linux/hid.c
+
+To
+win32:CONFIG(release, debug|release): LIBS += -L../hidapi-master/windows/release/ -lhidapi
+else:win32:CONFIG(debug, debug|release): LIBS += -L../hidapi-master/windows/debug/ -lhidapi
+macx: SOURCES += hidapi-master/mac/hid.c
+unix: !macx: SOURCES += hidapi-master/linux/hid.c
+
+
+From
+#INCLUDEPATH += ../GUI/hidapi-master/hidapi
+#DEPENDPATH += ../GUI/hidapi-master/hidapi
+
+To
+INCLUDEPATH += hidapi-master/hidapi
+DEPENDPATH += hidapi-master/hidapi
+
+
+
+2. Some definition of [dlpc350_firmware.cpp] should be corrected.
+The indent should be inserted appropriately.
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    typedef unsigned short WORD;
+    typedef unsigned int LONG;
+    typedef unsigned int DWORD;
+    typedef struct tagBITMAPFILEHEADER {
+        WORD bfType;
+        DWORD bfSize;
+        WORD bfReserved1;
+        WORD bfReserved2;
+        DWORD bfOffBits;
+    } BITMAPFILEHEADER, *PBITMAPFILEHEADER;
+    typedef struct tagBITMAPINFOHEADER {
+        DWORD biSize;
+        LONG  biWidth;
+        LONG  biHeight;
+        WORD  biPlanes;
+        WORD  biBitCount;
+        DWORD biCompression;
+        DWORD biSizeImage;
+        LONG  biXPelsPerMeter;
+        LONG  biYPelsPerMeter;
+        DWORD biClrUsed;
+        DWORD biClrImportant;
+    } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+#endif
+
+
+
+3. Update the package manager and install required packages.
+
+$sudo apt update && sudo apt upgrade
+
+$sudo apt install build-essential
+
+$sudo apt install qtcreator qt5-default
+
+
+
+4. Compile the source code. [cd] to the directory including [LCr4500.pro] file.
+
+$qmake LCr4500.pro
+
+$make
+
+[LightCrafter4500] is newly made if compiled successfully (green color in
+terminal). Sometimes $make shows errors even if $qmake works. In this case,
+edit [LCr4500.pro] file ...
+
+
+
+5. Another package is needed to communiate via usb, [libudev-dev].
+
+$sudo apt install libudev-dev
+
+
+
+6. After successfully compiling the Qt project and installing packages, connect
+the Lightcrafter4500 to computer via USB.
+
+
+
+7. To communicate with the device with non-superuser account, make a file in
+/etc/udev/rules.d/
+
+$cd /etc/udec/rules.d/
+
+make a file and edit. For example,
+
+$sudo vim 10-lightcrafter.rules
+
+add below to the file.
+
+SUBSYSTEM=="usb", ACTION=="add", ATTRS{idVendor}=="0451",
+ATTRS{idProduct}=="6401", GROUP=="dlee"
+
+(The vendor id and product id can be found by $lsusb command. Put your user id
+into the GROUP=="___")
+
+
+
+
+8. Reboot your system.
+
+
+
+
+9. [cd] to the directory with [LightCrafter4500] file. Execute this file.
+
+$./LightCrafter4500
+
+
+
+10. When connection bullet changes from red to green, then it's connected!
+
+
+
+11. (However, the firmware update of [DLPC350] chipset was not possible -
+currently v.4.1.0. You can try to upload the firmware using another USB
+packages. Another option would be update the firmware using Windows machine
+first, and then operate the Lightcrafter4500 in Linux.
+
+
+12. Check if stimulus (Psychtoolbox-3) works well with the Lightcrafter4500.
+
+
+
+13. Done. Good luck!!
+
